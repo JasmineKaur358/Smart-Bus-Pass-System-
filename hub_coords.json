@@ -1,0 +1,23 @@
+{
+  "Ludhiana - City Centre (Railway Station / Bus Stand)": {"lat": 30.896775, "lng": 75.846066},
+  "Ludhiana - Gill Road ": {"lat":  30.889462, "lng": 75.858526},
+  "Ludhiana - Model Town / Chaura Bazar": {"lat": 30.888355, "lng": 75.840206},
+  "Ludhiana - Ferozepur Road (Industrial Area)": {"lat": 30.891601, "lng": 75.802354},
+  "Ludhiana - PAU / Ludhiana University area": {"lat": 30.902494, "lng": 75.807934},
+  "Ludhiana - Guru Nanak Dev Engineering College (GNDec)": {"lat": 30.860718, "lng": 75.859572},
+  "Ludhiana - Industrial Estate / Focal Point": {"lat": 30.891808, "lng": 75.865480},
+  "Ludhiana - Sarabha Nagar / Green Field": {"lat": 30.891423, "lng": 75.818087},
+  "Ludhiana - Phase 8 / Phase 5 (Residential + Commercial)": {"lat": 30.873573, "lng": 75.949180},
+  "Ludhiana - CT University / Jagraon Road area": {"lat": 30.819744, "lng": 75.555786},
+
+  "Jalandhar - City Centre (Bus Stand / Railway Station)": {"lat": 31.315754, "lng": 75.593892},
+  "Jalandhar - Model Town / Civil Lines": {"lat": 31.306908, "lng": 75.5793108},
+  "Jalandhar - Jalandhar Cantt": {"lat": 31.288505, "lng": 75.620339},
+  "Jalandhar - Adarsh Nagar / G.T. Road": {"lat": 31.327784, "lng": 75.574728},
+  "Jalandhar - DAV / Local College areas": {"lat": 31.349873, "lng": 75.558437},
+  "Jalandhar - Meadow / Urban Estate": {"lat": 31.291977, "lng": 75.590268},
+  "Phagwara - Phagwara Junction (on route towards Ludhiana)": {"lat": 31.217205, "lng": 75.765492},
+  "Phagwara - Lovely Professional University (LPU) [Phagwara area]": {"lat": 31.255403, "lng": 75.704867},
+  "Jalandhar - Nakodar Road / Kartarpur Road area": {"lat": 31.230175, "lng": 75.517674},
+  "Jalandhar - Basti Bawa Khel / Jalandhar West Residential Area": {"lat": 31.335681, "lng": 75.538732}
+}

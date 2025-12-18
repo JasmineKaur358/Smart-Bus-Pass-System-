@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>View Pass #{{ pass_obj.id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+</head>
+<body>
+  <div class="container">
+    <h2>Smart Bus Pass</h2>
+
+    <div id="passCard" style="text-align:center;">
+      <img src="{{ qr_path }}" alt="Pass QR" style="max-width:280px; border:1px solid #ddd; padding:8px; border-radius:8px;" />
+      <h3 style="margin-top:10px;">{{ user.name if user else "Passenger" }}</h3>
+      <div class="small">Pass ID: {{ pass_obj.id }}</div>
+      <div class="small">From: {{ pass_obj.start_hub }} → To: {{ pass_obj.dest_hub }}</div>
+      <div class="small">Type: {{ pass_obj.pass_type }}</div>
+      <div class="small">Valid from: {{ pass_obj.valid_from or 'N/A' }}</div>
+      <div class="small">Valid to: {{ pass_obj.valid_to or 'N/A' }}</div>
+      <div class="small" style="margin-top:8px;">
+        Status:
+        {% if status == 'valid' %}
+          <strong style="color: #1b5e20;">Valid</strong>
+        {% elif status == 'expired' %}
+          <strong style="color: #c00;">Expired</strong>
+        {% else %}
+          <strong style="color: #e67e22;">Not yet valid</strong>
+        {% endif %}
+      </div>
+
+      <div style="margin-top:12px;">
+        <button id="renewBtn" class="btn">Renew Pass</button>
+        <a class="muted" href="{{ url_for('home') }}">Home</a>
+      </div>
+
+      <div id="msg" class="msg" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+<script>
+  const renewBtn = document.getElementById('renewBtn');
+  const msgEl = document.getElementById('msg');
+
+  renewBtn.addEventListener('click', async function(){
+    msgEl.textContent = '';
+    if(!confirm('Renew this pass? Renew will extend the validity based on pass type.')) return;
+
+    // We need token: it's present in the URL query param
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if(!token){
+      msgEl.textContent = 'Missing token - cannot renew.';
+      return;
+    }
+
+    try {
+      const res = await fetch('/renew-pass/{{ pass_obj.id }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ token: token })
+      });
+      const data = await res.json();
+      if(!res.ok || data.status !== 'ok'){
+        msgEl.textContent = data.msg || 'Renewal failed';
+        return;
+      }
+      // success -> update page (new QR, new valid_to)
+      msgEl.style.color = '#1b5e20';
+      msgEl.textContent = 'Pass renewed! New valid to: ' + data.valid_to;
+      // update QR image and URL (force reload)
+      const img = document.querySelector('#passCard img');
+      img.src = data.qr_image + '?_=' + Date.now();
+    } catch(e){
+      console.error(e);
+      msgEl.textContent = 'Network error while renewing. See console.';
+    }
+  });
+</script>
+</body>
+</html>

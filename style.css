@@ -1,0 +1,293 @@
+/* style.css - Smart Bus Pass (updated for purchase/view-pass + renew) */
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fa;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    color: #222;
+}
+
+.container {
+    width: 700px;
+    margin: 30px auto;
+    background: white;
+    padding: 22px 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 18px rgba(0,0,0,0.06);
+}
+
+h1, h2, h3 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input, select, button, textarea {
+    margin: 8px 0 12px 0;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: box-shadow 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
+    background: #fff;
+}
+
+input[type="file"] { padding: 8px 6px; }
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #7aa7ff;
+    box-shadow: 0 0 0 3px rgba(122,167,255,0.12);
+}
+
+button {
+    background: #28a745;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.18s, transform 0.08s, opacity 0.12s;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    display:inline-block;
+}
+
+button:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+button:disabled,
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+label {
+    margin-top: 8px;
+    font-weight: bold;
+    color: #555;
+    display:block;
+}
+
+p {
+    text-align: center;
+    color: #444;
+}
+
+.required {
+    color: #d12;
+    margin-left: 4px;
+}
+
+.error-box {
+    background: #ffe6e6;
+    color: #a00;
+    border: 1px solid #f2b4b4;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+/* Inline field error (per input) */
+.inline-error {
+    color: #b00;
+    font-size: 0.9rem;
+    display: none;
+    margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .container { width: 95%; padding: 16px; margin: 20px auto; }
+}
+
+/* ---------- purchase + view helpers ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #1e88e5;
+  color: #fff;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(30,136,229,0.08);
+  vertical-align: middle;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.muted {
+  display: inline-block;
+  background: #efefef;
+  color: #111;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-left: 8px;
+  text-decoration: none;
+  border: 1px solid #ddd;
+}
+
+.muted:hover { opacity: 0.92; }
+
+/* Price box */
+.priceBox {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fafafa;
+  max-width: 520px;
+  line-height: 1.4;
+}
+
+.priceVal {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1b5e20;
+}
+
+.small {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Messages */
+.msg {
+  margin-top: 10px;
+  color: #c00;
+  white-space: pre-wrap;
+  font-weight: 600;
+  transition: color 0.12s ease;
+}
+
+.msg.success { color: #1b5e20; font-weight:700; }
+.msg.info { color: #1565c0; font-weight:700; }
+
+/* QR container styling */
+#qrContainer {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 14px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+  max-width: 520px;
+  margin: 10px auto 0;
+}
+
+#qrContainer h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+/* View-pass card */
+#passCard {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 14px;
+  border-radius: 8px;
+  background: linear-gradient(180deg,#ffffff,#fbfbff);
+  border: 1px solid #efefef;
+  box-shadow: 0 8px 24px rgba(20,20,40,0.04);
+}
+
+#passCard img {
+  max-width: 280px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 8px;
+  background: #fff;
+}
+
+.pass-meta {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* Renew button (emphasized) */
+#renewBtn {
+  background: #ff9800;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  margin-right: 8px;
+  box-shadow: 0 6px 18px rgba(255,152,0,0.12);
+}
+
+#renewBtn:hover { filter: brightness(.98); transform: translateY(-1px); }
+
+#renewBtn[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* tiny status badges */
+.badge {
+  display:inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight:700;
+  font-size:0.9rem;
+}
+
+.badge.valid { background: #e6f4ea; color: #1b5e20; border: 1px solid rgba(27,94,32,0.08); }
+.badge.expired { background: #ffecec; color: #b71c1c; border: 1px solid rgba(183,28,28,0.06); }
+.badge.pending { background: #fff4e6; color: #e67e22; border: 1px solid rgba(230,126,34,0.06); }
+
+/* helper: right/left columns (if needed) */
+.row-flex {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+/* spinner (small inline) */
+.spinner {
+  display:inline-block;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,0.3);
+  border-top-color: rgba(255,255,255,0.9);
+  animation: spin 0.9s linear infinite;
+  vertical-align:middle;
+  margin-left:8px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* small helpers */
+a.muted:hover { opacity: 0.9; }
+small { color:#666; }
+
+/* mobile tweaks */
+@media (max-width: 640px) {
+  .priceBox { max-width: 100%; padding: 12px; }
+  .btn, .muted { padding: 10px 12px; }
+  .container { padding: 16px; width: 95%; }
+  #passCard img { max-width: 220px; }
+  #qrContainer { padding: 10px; }
+}

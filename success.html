@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Registration Successful</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .center { text-align:center; max-width:720px; margin:30px auto; padding:18px; }
+    .btn { display:inline-block; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; }
+    .btn-primary { background:#1e88e5; color:#fff; border:0; box-shadow:0 4px 10px rgba(30,136,229,0.12); }
+    .btn-muted { background:#f3f4f6; color:#111; border:1px solid #ddd; }
+    .notice { background:#e8f5e9; border:1px solid #c8e6c9; padding:12px; border-radius:8px; color:#256029; margin-bottom:14px; display:flex; gap:12px; align-items:center; justify-content:center;}
+    .toast { position:fixed; right:18px; top:18px; background:#323232; color:#fff; padding:10px 14px; border-radius:8px; opacity:0; transform:translateY(-6px); transition:all .25s ease; z-index:2000; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .small { font-size:0.95rem; color:#444; }
+  </style>
+</head>
+<body>
+  <div class="container center">
+    <h1 style="color:green;">✅ Registration Successful!</h1>
+
+    <div class="notice" role="status" aria-live="polite">
+      <div style="font-weight:700;">Verification successful — proceed to payment</div>
+    </div>
+
+    <p class="small">Congratulations, <strong>{{ name }}</strong>! Your Smart Bus Pass request has been verified successfully.</p>
+    <p class="small">Next step: pay for the pass to generate the digital QR pass.</p>
+
+    {# Build the buy-pass URL using the session-stored registered_user_id.
+       If there's no registered_user_id in session, fall back to home. #}
+    {% set reg_id = session.get('registered_user_id') %}
+    {% if reg_id %}
+      <p>
+        <a id="proceedBtn" class="btn btn-primary" href="{{ url_for('buy_pass', user_id=reg_id) }}">Proceed to Payment</a>
+        <a class="btn btn-muted" href="{{ url_for('home') }}" style="margin-left:10px;">Register another user</a>
+      </p>
+    {% else %}
+      <p>
+        <a class="btn btn-primary" href="{{ url_for('home') }}">Go to Home / Register</a>
+      </p>
+      <p class="small" style="color:#666;">(No session user found — if you expected to pay now, please re-register.)</p>
+    {% endif %}
+
+    <p style="margin-top:18px;" class="small">If you prefer automatic forwarding to payment after verification, I can update the server to redirect straight to the payment page instead of showing this screen.</p>
+
+  </div>
+
+  <!-- Toast message (brief flash) -->
+  <div id="flashToast" class="toast" role="alert" aria-live="assertive">Verification successful — proceed to payment</div>
+
+<script>
+  // clear front-end saved draft (if any)
+  try { localStorage.removeItem('sbp_form_draft_v1'); } catch(e){}
+  history.replaceState(null, document.title, location.href);
+
+  // show toast briefly
+  (function showToast(){
+    const t = document.getElementById('flashToast');
+    if(!t) return;
+    // show for 3s
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 3000);
+  })();
+
+  // Prevent back navigation to filled form (optional safety)
+  window.addEventListener('popstate', function () {
+    // if user presses back, send them to home (avoids resubmitting form)
+    location.replace('{{ url_for("home") }}');
+  });
+
+  // Optional: auto-redirect after a short delay (uncomment if you want automatic forward)
+  // const regId = {{ reg_id|default('null') }};
+  // if(regId){
+  //   setTimeout(()=> { window.location.href = "{{ url_for('buy_pass', user_id='__ID__') }}".replace('__ID__', regId); }, 4000);
+  // }
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Rejected</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      /* Debug / details block */
+      .debug {
+        font-size: 0.9rem;
+        color: #333;
+        margin-top: 12px;
+        white-space: pre-wrap;
+        background:#f8f8f8;
+        padding:12px;
+        border-radius:6px;
+        border:1px solid #eee;
+      }
+
+      .primary-box {
+        background:#fff3f3;
+        color:#a00;
+        border:1px solid #f5c6cb;
+        padding:14px;
+        border-radius:8px;
+        margin-bottom:12px;
+        font-weight:600;
+      }
+
+      /* Normal visible button style (filled, blue) */
+      .toggle-btn {
+        display: inline-block;
+        background: #2b7be9;           /* filled blue */
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        border-radius: 6px;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(43,123,233,0.18);
+        transition: background .15s ease, transform .06s ease;
+        margin-top: 10px;
+        text-decoration: none;
+      }
+      .toggle-btn:hover { background: #1f6fd6; transform: translateY(-1px); }
+      .toggle-btn:active { transform: translateY(0); }
+
+      /* Keep layout nice on small screens */
+      .container { max-width: 820px; margin: 36px auto; padding: 28px; background: #fff; border-radius:10px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
+      .error-box { background:#fff3f3;color:#a00;border:1px solid #f5c6cb;padding:10px;border-radius:6px;margin-bottom:12px;text-align:left; }
+      a.start-over { display:inline-block; margin-top:14px; color:#5a36d6; text-decoration: none; }
+      a.start-over:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color:red;">❌ Registration Rejected</h1>
+        <p>Sorry, <strong>{{ name }}</strong>. Your application was rejected.</p>
+
+        <h3>Main reason:</h3>
+        <div class="primary-box">
+            {{ primary }}
+        </div>
+
+        <!-- Visible, normal-looking button -->
+        <div style="text-align:center;">
+          <button id="showDetails" class="toggle-btn" type="button">Show details &amp; OCR (why it was rejected)</button>
+        </div>
+
+        <!-- Details remain collapsed by default -->
+        <div id="detailsBlock" style="display:none; margin-top:18px;">
+          {% if details %}
+            <h3>Full reason(s):</h3>
+            <div class="error-box" style="background:#fff3f3;color:#a00;border-color:#f5c6cb;text-align:left;">
+              {{ details }}
+            </div>
+          {% endif %}
+
+          {% if debug %}
+            <div class="debug" style="margin-top:12px;">
+                <strong>OCR text (debug) — look for your name / Aadhaar / DOB in this:</strong>
+                <div>{{ debug }}</div>
+                <small>Try re-uploading a clearer photo (good lighting, flat, no blur). If your name is spelled differently on ID, enter the exact name from the ID and try again.</small>
+            </div>
+          {% endif %}
+        </div>
+
+        <p style="margin-top:18px; text-align:center;">
+          <a class="start-over" href="{{ url_for('cancel_registration') }}">Try again / Start Over</a>
+        </p>
+    </div>
+
+<script>
+  (function(){
+    var btn = document.getElementById('showDetails');
+    var block = document.getElementById('detailsBlock');
+    if(!btn || !block) return;
+    btn.addEventListener('click', function(){
+      if(block.style.display === 'none' || block.style.display === ''){
+        block.style.display = 'block';
+        btn.textContent = 'Hide details & OCR';
+      } else {
+        block.style.display = 'none';
+        btn.textContent = 'Show details & OCR (why it was rejected)';
+      }
+      // smooth scroll slightly so user sees the details appear (optional)
+      if(block.style.display === 'block') block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  })();
+
+  // Disable back to OTP/form states
+  history.replaceState(null, document.title, location.href);
+  window.addEventListener('popstate', function () {
+    location.replace('{{ url_for("home") }}');
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Buy Pass</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- Razorpay checkout library (only used if you have real key) -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Buy Pass</h2>
+
+    <div class="row">
+      <label>Start hub:</label>
+      <select id="startHub">
+        <option value="">-- Select start hub --</option>
+        {% for h in hubs %}
+          <option value="{{ h }}" {% if start_hub==h %}selected{% endif %}>{{ h }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="row">
+      <label>Destination hub:</label>
+      <select id="destHub">
+        <option value="">-- Select destination hub --</option>
+        {% for h in hubs %}
+          <option value="{{ h }}" {% if dest_hub==h %}selected{% endif %}>{{ h }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="row">
+      <label>Category:</label>
+      <select id="category">
+        <option value="General" {% if user_category=='General' or not user_category %}selected{% endif %}>General</option>
+        <option value="Student" {% if user_category=='Student' %}selected{% endif %}>Student</option>
+        <option value="Senior Citizen" {% if user_category=='Senior Citizen' %}selected{% endif %}>Senior Citizen</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label>Pass type:</label>
+      <select id="passType">
+        <option value="Daily">Daily</option>
+        <option value="Weekly">Weekly</option>
+        <option value="Monthly" selected>Monthly</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label>Valid from (optional, YYYY-MM-DD):</label>
+      <input id="validFrom" type="date" />
+    </div>
+
+    <div class="priceBox" id="priceBox" aria-live="polite">
+      <div><span class="small">Distance:</span> <span id="distanceVal">—</span> km</div>
+      <div style="margin-top:6px;"><span class="small">Total price:</span> 
+        <span class="priceVal" id="priceVal">—</span> 
+        <span class="small">INR</span>
+      </div>
+      <div class="small" id="breakdown" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <button id="payBtn" class="btn">Pay & Buy Pass</button>
+      <a class="muted" href="{{ url_for('home') }}">Home</a>
+    </div>
+
+    <div id="msg" class="msg"></div>
+
+    <!-- After success we will show the QR image & a link to view passes -->
+    <div id="qrContainer" style="margin-top:16px; display:none;">
+      <h3>Pass created — show this QR at boarding</h3>
+      <img id="qrImg" alt="Pass QR" style="max-width:280px; border:1px solid #ddd; padding:8px; border-radius:8px;" />
+      <div style="margin-top:8px;">
+        <a id="viewPassLink" class="muted" href="#">View pass</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- server JSON (safe) -->
+  <script id="server-data" type="application/json">
+    {{ {"user_id": user_id, "user_category": user_category if user_category is defined else None}|tojson }}
+  </script>
+
+  <script>
+    // parse server-provided JSON (no inline Jinja inside JS)
+    let serverData = {};
+    try {
+      const raw = document.getElementById('server-data').textContent || '{}';
+      serverData = JSON.parse(raw);
+    } catch(e){
+      console.error("Failed to parse server-data JSON", e);
+      serverData = {};
+    }
+
+    const payBtn = document.getElementById('payBtn');
+    const msgEl = document.getElementById('msg');
+    const priceVal = document.getElementById('priceVal');
+    const distanceVal = document.getElementById('distanceVal');
+    const breakdownEl = document.getElementById('breakdown');
+    const qrContainer = document.getElementById('qrContainer');
+    const qrImg = document.getElementById('qrImg');
+    const viewPassLink = document.getElementById('viewPassLink');
+
+    const userId = serverData.user_id || null;
+    const initialCategory = serverData.user_category || null;
+
+    function showMsg(t, isError=true){
+      msgEl.classList.remove('success');
+      msgEl.style.color = isError ? '#c00' : '#1b5e20';
+      if(!isError) msgEl.classList.add('success');
+      msgEl.textContent = t;
+    }
+
+    function getSelections(){
+      return {
+        start_hub: document.getElementById('startHub').value,
+        dest_hub: document.getElementById('destHub').value,
+        category: document.getElementById('category').value,
+        pass_type: document.getElementById('passType').value,
+        valid_from: document.getElementById('validFrom').value
+      };
+    }
+
+    async function fetchPriceAndShow(){
+      const sel = getSelections();
+      priceVal.textContent = '...';
+      distanceVal.textContent = '...';
+      breakdownEl.textContent = '';
+
+      if(!sel.start_hub || !sel.dest_hub){
+        priceVal.textContent = '—';
+        distanceVal.textContent = '—';
+        return;
+      }
+
+      try {
+        const res = await fetch('/price', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({
+            start_hub: sel.start_hub,
+            dest_hub: sel.dest_hub,
+            category: sel.category,
+            pass_type: sel.pass_type
+          })
+        });
+
+        const ctype = res.headers.get('content-type') || '';
+        if(ctype.indexOf('application/json') === -1){
+          const t = await res.text();
+          showMsg('Server error when getting price. Response: ' + t);
+          priceVal.textContent = '—';
+          distanceVal.textContent = '—';
+          return;
+        }
+
+        const data = await res.json();
+        if(!res.ok || data.status !== 'ok'){
+          showMsg(data.msg || 'Could not compute price', true);
+          priceVal.textContent = '—';
+          distanceVal.textContent = '—';
+          return;
+        }
+
+        priceVal.textContent = Number(data.amount).toFixed(2);
+        distanceVal.textContent = Number(data.distance_km || 0).toFixed(2);
+        breakdownEl.textContent = `Daily: ₹${Number(data.daily).toFixed(2)} • Weekly: ₹${Number(data.weekly).toFixed(2)} • Monthly: ₹${Number(data.monthly).toFixed(2)}`;
+        msgEl.textContent = '';
+
+      } catch(err){
+        console.error(err);
+        showMsg('Network or parsing error while fetching price. See console.');
+        priceVal.textContent = '—';
+        distanceVal.textContent = '—';
+      }
+    }
+
+    // wire change handlers
+    ['startHub','destHub','category','passType'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.addEventListener('change', fetchPriceAndShow);
+    });
+
+    if(initialCategory && document.getElementById('category')){
+      document.getElementById('category').value = initialCategory;
+    }
+    window.addEventListener('load', fetchPriceAndShow);
+
+    // Confirm payment route wrapper
+    async function callConfirmPayment(payload) {
+      try {
+        const res = await fetch('/confirm-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const ctype = res.headers.get('content-type') || '';
+        if(ctype.indexOf('application/json') === -1){
+          const txt = await res.text();
+          showMsg('Server did not return JSON from confirm-payment: ' + txt);
+          return null;
+        }
+        return await res.json();
+      } catch(err){
+        console.error("confirm-payment error", err);
+        showMsg('Network error calling confirm-payment. See console.');
+        return null;
+      }
+    }
+
+    payBtn.addEventListener('click', async function(){
+      const sel = getSelections();
+      msgEl.textContent = '';
+      qrContainer.style.display = 'none';
+      if(!userId){
+        showMsg('No registered user id in context. Please register again.');
+        return;
+      }
+      if(!sel.start_hub || !sel.dest_hub){
+        showMsg('Please select start and destination hubs.');
+        return;
+      }
+
+      const payload = {
+        user_id: userId,
+        pass_type: sel.pass_type,
+        start_hub: sel.start_hub,
+        dest_hub: sel.dest_hub,
+        category: sel.category,
+        valid_from: sel.valid_from || ''
+      };
+
+      try {
+        const res = await fetch('/create-order', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const ct = res.headers.get('content-type') || '';
+        if(ct.indexOf('application/json') === -1){
+          const txt = await res.text();
+          showMsg('Server did not return JSON when creating order. Response: ' + txt);
+          return;
+        }
+        const data = await res.json();
+        if(!res.ok){
+          showMsg(data.msg || ('Server returned ' + res.status));
+          return;
+        }
+
+        const orderId = data.order_id;
+        const amount = data.amount; // in paise
+        const passId = data.pass_id;
+        const key = data.key; // RAZORPAY_KEY_ID or null for demo
+
+        // if key not provided -> demo/local mode (fake order created already)
+        if(!key){
+          showMsg('Local/demo mode: order created. Pass id: ' + passId, false);
+          // if server provided a view_url in response, open it directly (helpful for demo)
+          if(data.view_url){
+            setTimeout(()=> window.location.href = data.view_url, 800);
+            return;
+          }
+          // otherwise go home (as before)
+          setTimeout(()=> window.location.href='{{ url_for("home") }}', 1400);
+          return;
+        }
+
+        // Real/test-mode: open Razorpay checkout
+        const options = {
+          "key": key, // from server
+          "amount": amount, // in paise
+          "currency": "INR",
+          "name": "Smart Bus Pass",
+          "description": `Pass #${passId}`,
+          "order_id": orderId,
+          "handler": async function (response){
+            // response contains razorpay_payment_id, razorpay_order_id, razorpay_signature
+            showMsg('Verifying payment, please wait...', false);
+            const payload = {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              pass_id: passId
+            };
+            const confirmResp = await callConfirmPayment(payload);
+            if(!confirmResp){
+              return;
+            }
+            if(confirmResp.status && confirmResp.status === 'ok'){
+              // server returns QR path & view_url in JSON (confirm-payment returns qr_image & view_url)
+              const qr = confirmResp.qr_image || confirmResp.qr || null;
+              showMsg('Payment verified and pass created!', false);
+              if(qr){
+                qrImg.src = qr;
+                // prefer view_url returned by server; if not present, fallback to image
+                viewPassLink.href = confirmResp.view_url || (qr || '#');
+                qrContainer.style.display = 'block';
+              } else {
+                // if server returns pass id only, navigate to home / passes page
+                setTimeout(()=> window.location.href='{{ url_for("home") }}', 1200);
+              }
+            } else {
+              // server returned error
+              showMsg(confirmResp.msg || confirmResp.error || 'Payment verification failed on server', true);
+            }
+          },
+          "prefill": {
+            "name": "{{ user_name|default('', true) }}",
+            "email": "{{ user_email|default('', true) }}",
+            "contact": "{{ user_phone|default('', true) }}"
+          },
+          "theme": { "color": "#1e88e5" }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (resp){
+          console.error("razorpay failed", resp);
+          showMsg('Payment failed or cancelled. See console for details.', true);
+        });
+
+        // open the checkout
+        rzp.open();
+
+      } catch(err){
+        console.error(err);
+        showMsg('Network error creating order. See console for details.');
+      }
+    });
+  </script>
+</body>
+</html>

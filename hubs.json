@@ -1,0 +1,30 @@
+{
+  "Ludhiana": {
+    "hubs": [
+      "City Centre (Bus Stand/Railway Station)",
+      "Gill Road ",
+      "Model Town / Chaura Bazar",
+      "Ferozepur Road (Industrial Area)",
+      "PAU / Ludhiana University area",
+      "Guru Nanak Dev Engineering College (GNDec)",
+      "Industrial Estate / Focal Point",
+      "Sarabha Nagar / Green Field",
+      "Phase 8 / Phase 5 (Residential + Commercial)",
+      "CT University / Jagraon Road area"
+    ]
+  },
+  "Jalandhar": {
+    "hubs": [
+      "City Centre (Bus Stand / Railway Station)",
+      "Model Town / Civil Lines",
+      "Jalandhar Cantt",
+      "Adarsh Nagar / G.T. Road",
+      "DAV / Local College areas",
+      "Meadow / Urban Estate",
+      "Phagwara Junction (on route towards Ludhiana)",
+      "Lovely Professional University (LPU) [Phagwara area]",
+      "Nakodar Road / Kartarpur Road area",
+      "Basti Bawa Khel / Jalandhar West Residential Area"
+    ]
+  }
+}

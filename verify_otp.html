@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Verify OTP</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Enter OTP sent to your Email</h2>
+    {% if error %}
+      <div class="error-box">{{ error }}</div>
+    {% endif %}
+    {% if expires_in is not none %}
+      <p>OTP valid for: <strong id="countdown">{{ expires_in }}</strong> seconds</p>
+    {% endif %}
+    <form method="POST">
+      <input type="text" name="otp" placeholder="Enter OTP" required>
+      <button type="submit">Verify OTP</button>
+    </form>
+
+    <p style="margin-top:10px;"><a href="{{ url_for('cancel_registration') }}">Cancel / Start Over</a></p>
+    <p><a href="{{ url_for('resend_otp') }}">Resend OTP</a></p>
+  </div>
+
+<script>
+  (function(){
+    var el = document.getElementById('countdown');
+    if (!el) return;
+    var t = parseInt(el.textContent, 10);
+    var timer = setInterval(function(){
+      t = t - 1;
+      if (t <= 0) { el.textContent = 0; clearInterval(timer); return; }
+      el.textContent = t;
+    }, 1000);
+  })();
+  history.replaceState(null, document.title, location.href);
+</script>
+</body>
+</html>

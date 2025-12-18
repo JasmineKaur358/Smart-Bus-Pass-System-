@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Bus Pass Registration</title>
+
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .inline-error { color:#b00; font-size:0.9rem; display:none; margin-top:4px; }
+    .field-row { margin-bottom:10px; position:relative; }
+    .required { color:#d12; margin-left:4px; }
+    .label-inline { display:block; font-weight:bold; margin-bottom:6px; }
+    .category-hint { font-size:0.9rem; color:#333; margin-bottom:8px; text-align:center; }
+    .error-box { background:#fff3f3;color:#a00;border:1px solid #f5c6cb;padding:10px;border-radius:6px;margin-bottom:12px;text-align:left; }
+    select:invalid { border-color: #b00; }
+    input[type="file"] { display:block; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Smart Bus Pass Registration</h1>
+
+    {% if errors and errors.get('_top') %}
+      <div class="error-box">{{ errors.get('_top') }}</div>
+    {% endif %}
+
+    <form id="regForm" method="POST" action="/register" enctype="multipart/form-data" novalidate autocomplete="off">
+      <h3>Personal Details</h3>
+
+      <div class="field-row">
+        <label class="label-inline">Full Name <span class="required">*</span></label>
+        <input id="name" type="text" name="name" placeholder="Full Name" required autocomplete="off" value="{{ form.get('name','') }}">
+        <div id="name_err" class="inline-error">{% if errors.get('name') %}{{ errors.get('name') }}{% else %}Name should contain only letters and spaces (no numbers or symbols).{% endif %}</div>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Date of Birth <span class="required">*</span></label>
+        <input id="dob" type="date" name="dob" required value="{{ form.get('dob','') }}">
+        <div id="dob_err" class="inline-error">{% if errors.get('dob') %}{{ errors.get('dob') }}{% else %}You must be at least 18 years old.{% endif %}</div>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Aadhaar Number <span class="required">*</span></label>
+        <input id="aadhaar" type="text" name="aadhaar" placeholder="12-digit Aadhaar" maxlength="12" required autocomplete="off" value="{{ form.get('aadhaar','') }}">
+        <div id="aadhaar_err" class="inline-error">{% if errors.get('aadhaar') %}{{ errors.get('aadhaar') }}{% else %}Aadhaar must be 12 digits (only numbers allowed).{% endif %}</div>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Phone <span class="required">*</span></label>
+        <input id="phone" type="text" name="phone" placeholder="10-digit phone" maxlength="10" required autocomplete="off" value="{{ form.get('phone','') }}">
+        <div id="phone_err" class="inline-error">{% if errors.get('phone') %}{{ errors.get('phone') }}{% else %}Phone must be 10 digits (only numbers allowed).{% endif %}</div>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Email <span class="required">*</span></label>
+        <input id="email" type="email" name="email" placeholder="Email Address" required autocomplete="off" value="{{ form.get('email','') }}">
+        <div id="email_err" class="inline-error">{% if errors.get('email') %}{{ errors.get('email') }}{% else %}Enter a valid email address.{% endif %}</div>
+      </div>
+
+      <h3>Address</h3>
+      <div class="field-row">
+        <label class="label-inline">Street / House No. <span class="required">*</span></label>
+        <input id="address" type="text" name="address" required autocomplete="off" value="{{ form.get('address','') }}">
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">City <span class="required">*</span></label>
+        <input id="city" type="text" name="city" required autocomplete="off" value="{{ form.get('city','') }}">
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">District <span class="required">*</span></label>
+        <input id="district" type="text" name="district" required autocomplete="off" value="{{ form.get('district','') }}">
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Pincode <span class="required">*</span></label>
+        <input id="pincode" type="text" name="pincode" placeholder="6-digit pincode" maxlength="6" required autocomplete="off" value="{{ form.get('pincode','') }}">
+        <div id="pincode_err" class="inline-error">{% if errors.get('pincode') %}{{ errors.get('pincode') }}{% else %}Pincode must be 6 digits.{% endif %}</div>
+      </div>
+
+      <h3>Travel</h3>
+      <div class="field-row">
+        <label class="label-inline">Starting From <span class="required">*</span></label>
+        <select id="starting_from" name="starting_from" required>
+          <option value="">-- Select starting hub --</option>
+          {% for h in hubs %}
+            <option value="{{ h }}" {% if form.get('starting_from')==h %}selected{% endif %}>{{ h }}</option>
+          {% endfor %}
+        </select>
+        <div id="starting_from_err" class="inline-error">Please select a starting hub.</div>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Destination <span class="required">*</span></label>
+        <select id="destination" name="destination" required>
+          <option value="">-- Select destination hub --</option>
+          {% for h in hubs %}
+            <option value="{{ h }}" {% if form.get('destination')==h %}selected{% endif %}>{{ h }}</option>
+          {% endfor %}
+        </select>
+        <div id="destination_err" class="inline-error">Please select a destination hub.</div>
+      </div>
+
+      <h3>Pass Details</h3>
+      <div class="category-hint" id="categoryHint">Choose a category to see required ID type.</div>
+
+      <div class="field-row">
+        <label class="label-inline">Category <span class="required">*</span></label>
+        <select id="category" name="category" required>
+          <option value="">Select Category</option>
+          <option {% if form.get('category')=='Student' %}selected{% endif %}>Student</option>
+          <option {% if form.get('category')=='General' %}selected{% endif %}>General</option>
+          <option {% if form.get('category')=='Senior Citizen' %}selected{% endif %}>Senior Citizen</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Pass Type <span class="required">*</span></label>
+        <select id="pass_type" name="pass_type" required>
+          <option value="">Select Pass Type</option>
+          <option {% if form.get('pass_type')=='Daily' %}selected{% endif %}>Daily</option>
+          <option {% if form.get('pass_type')=='Weekly' %}selected{% endif %}>Weekly</option>
+          <option {% if form.get('pass_type')=='Monthly' %}selected{% endif %}>Monthly</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Start Date</label>
+        <input id="start_date" type="date" name="start_date" value="{{ form.get('start_date','') }}">
+      </div>
+
+      <h3>Upload Documents</h3>
+      <div class="field-row">
+        <label class="label-inline">ID Proof (Aadhaar / School ID / Senior ID) - image only <span class="required">*</span></label>
+        <input id="id_proof" type="file" name="id_proof" accept="image/png, image/jpeg" required>
+        <div id="id_proof_err" class="inline-error">{% if errors.get('id_proof') %}{{ errors.get('id_proof') }}{% else %}Please upload ID proof (JPG/JPEG/PNG, max 5 MB).{% endif %}</div>
+      </div>
+
+      <div class="field-row">
+        <label class="label-inline">Passport Size Photo <span class="required">*</span></label>
+        <input id="photo" type="file" name="photo" accept="image/png, image/jpeg" required>
+        <div id="photo_err" class="inline-error">{% if errors.get('photo') %}{{ errors.get('photo') }}{% else %}Please upload a passport photo (JPG/JPEG/PNG, max 5 MB).{% endif %}</div>
+      </div>
+
+      <h3>Agreement</h3>
+      <div class="field-row">
+        <input id="agree" type="checkbox" name="agree" required> I agree to Terms & Conditions
+      </div>
+
+      <button id="submitBtn" type="submit">Register</button>
+    </form>
+  </div>
+
+<script>
+  // ---------- Autosave ----------
+  const DRAFT_KEY = 'sbp_form_draft_v1';
+  const HUBS = JSON.parse('{{ hubs|tojson|safe }}');
+  const ALLOWED_EXT = ['jpg','jpeg','png'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  function getDraft(){ try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || '{}'); } catch(e){ return {}; } }
+  function saveDraft(){
+    const data={};
+    ['name','dob','aadhaar','phone','email','address','city','district','pincode','starting_from','destination','category','pass_type','start_date'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) data[id]=el.value;
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  }
+  function loadDraft(){
+    const d = getDraft();
+    for(const k in d){
+      const el = document.getElementById(k);
+      if(el && !el.value) el.value = d[k] || '';
+    }
+    if(d.category) document.getElementById('category').value = d.category;
+    if(d.pass_type) document.getElementById('pass_type').value = d.pass_type;
+  }
+  loadDraft();
+
+  ['name','dob','aadhaar','phone','email','address','city','district','pincode','starting_from','destination','category','pass_type','start_date'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('input', saveDraft);
+    el.addEventListener('change', saveDraft);
+  });
+
+  function showErr(id,msg){ const el=document.getElementById(id); if(!el) return; el.textContent = msg; el.style.display='block'; }
+  function hideErr(id){ const el=document.getElementById(id); if(el) el.style.display='none'; }
+  function calcAge(d){ if(!d) return -1; const dob=new Date(d); const t=new Date(); let a=t.getFullYear()-dob.getFullYear(); if((t.getMonth()<dob.getMonth()) || (t.getMonth()==dob.getMonth() && t.getDate()<dob.getDate())) a--; return a; }
+
+  (function setDobMax(){ const dob=document.getElementById('dob'); if(!dob) return; const t=new Date(); t.setFullYear(t.getFullYear()-18); dob.max = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })();
+
+  function updateCategoryHint(){
+    const cat = (document.getElementById('category').value || '').trim();
+    const hint = document.getElementById('categoryHint');
+    if(cat==='Student') hint.textContent = "Student selected — upload STUDENT ID (Aadhaar not allowed).";
+    else if(cat==='Senior Citizen') hint.textContent = "Senior Citizen — Aadhaar required for verification.";
+    else if(cat==='General') hint.textContent = "General — Aadhaar required for verification.";
+    else hint.textContent = "Choose a category to see required ID type.";
+  }
+  document.getElementById('category').addEventListener('change', ()=>{ updateCategoryHint(); saveDraft(); });
+  updateCategoryHint();
+
+  const nameEl = document.getElementById('name');
+  nameEl.addEventListener('input', function(){
+    const raw = this.value;
+    const cleaned = raw.replace(/[^A-Za-z\s]/g, '');
+    if(raw !== cleaned){
+      this.value = cleaned;
+      showErr('name_err','Name should contain only letters and spaces (no numbers or symbols).');
+    } else hideErr('name_err');
+    saveDraft();
+  });
+
+  function enforceDigits(el, maxLen, errId, friendly){
+    el.addEventListener('input', function(){
+      const raw = this.value;
+      const digits = raw.replace(/\D+/g, '');
+      if(raw !== digits){
+        this.value = digits;
+        showErr(errId, friendly + ' should contain only digits.');
+      } else hideErr(errId);
+      if(maxLen && this.value.length > maxLen) this.value = this.value.slice(0, maxLen);
+      saveDraft();
+    });
+    el.addEventListener('blur', function(){
+      if(maxLen && this.value.length !== maxLen){
+        showErr(errId, friendly + ' must be exactly ' + maxLen + ' digits.');
+      } else {
+        hideErr(errId);
+      }
+    });
+  }
+  enforceDigits(document.getElementById('aadhaar'), 12, 'aadhaar_err', 'Aadhaar');
+  enforceDigits(document.getElementById('phone'), 10, 'phone_err', 'Phone');
+  enforceDigits(document.getElementById('pincode'), 6, 'pincode_err', 'Pincode');
+
+  // Immediate email validation (on input + blur)
+  const emailEl = document.getElementById('email');
+  function validateEmailShow(){
+    const email = (emailEl.value || '').trim();
+    const ok = /^[^@]+@[^@]+\.[^@]+$/.test(email);
+    if(!email){
+      showErr('email_err','Email is required.');
+      return false;
+    } else if(!ok){
+      showErr('email_err','Enter a valid email address.');
+      return false;
+    } else {
+      hideErr('email_err');
+      return true;
+    }
+  }
+  emailEl.addEventListener('input', validateEmailShow);
+  emailEl.addEventListener('blur', validateEmailShow);
+
+  // Show/hide hub-select inline errors when user interacts
+  ['starting_from','destination'].forEach(id=>{
+    const el = document.getElementById(id);
+    const errId = id + '_err';
+    if(!el) return;
+    el.addEventListener('change', function(){
+      if(!this.value) showErr(errId, 'Please select a ' + (id==='starting_from' ? 'starting hub.' : 'destination hub.'));
+      else hideErr(errId);
+    });
+    el.addEventListener('blur', function(){
+      if(!this.value) showErr(errId, 'Please select a ' + (id==='starting_from' ? 'starting hub.' : 'destination hub.'));
+      else hideErr(errId);
+    });
+  });
+
+  // ---------- FILE INPUT VALIDATION ----------
+  function fileHasValidTypeAndSize(file){
+    if(!file) return {ok:false, msg:'No file'};
+    const name = (file.name || '').toLowerCase();
+    const ext = name.split('.').pop() || '';
+    if(!ALLOWED_EXT.includes(ext)){
+      return {ok:false, msg:'Only JPG/JPEG/PNG allowed.'};
+    }
+    if(file.size > MAX_FILE_SIZE){
+      return {ok:false, msg:'File too large (max 5 MB).'};
+    }
+    return {ok:true};
+  }
+
+  function setupFileInputValidation(id, errId){
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('change', function(){
+      hideErr(errId);
+      if(el.files && el.files.length){
+        const r = fileHasValidTypeAndSize(el.files[0]);
+        if(!r.ok) showErr(errId, r.msg);
+        else hideErr(errId);
+      } else {
+        showErr(errId, 'This file is required.');
+      }
+    });
+    // blur handler to show required if empty
+    el.addEventListener('blur', function(){
+      if(!el.files || !el.files.length) showErr(errId, 'This file is required.');
+    });
+  }
+  setupFileInputValidation('id_proof','id_proof_err');
+  setupFileInputValidation('photo','photo_err');
+
+  document.getElementById('regForm').addEventListener('submit', function(e){
+    let stop = false;
+
+    const name = document.getElementById('name').value.trim();
+    if(!/^[A-Za-z\s]{2,120}$/.test(name)){
+      showErr('name_err','Name should contain only letters and spaces (2-120 chars).');
+      stop = true;
+    } else hideErr('name_err');
+
+    const dob = document.getElementById('dob').value;
+    if(calcAge(dob) < 18){
+      showErr('dob_err','You must be at least 18 years old.');
+      stop = true;
+    } else hideErr('dob_err');
+
+    const aad = document.getElementById('aadhaar').value.trim();
+    if(!/^\d{12}$/.test(aad)){
+      showErr('aadhaar_err','Aadhaar must be exactly 12 digits.');
+      stop = true;
+    } else hideErr('aadhaar_err');
+
+    const ph = document.getElementById('phone').value.trim();
+    if(!/^\d{10}$/.test(ph)){
+      showErr('phone_err','Phone must be exactly 10 digits.');
+      stop = true;
+    } else hideErr('phone_err');
+
+    const emailValid = validateEmailShow();
+    if(!emailValid) stop = true;
+
+    const pin = document.getElementById('pincode').value.trim();
+    if(!/^\d{6}$/.test(pin)){
+      showErr('pincode_err','Pincode must be exactly 6 digits.');
+      stop = true;
+    } else hideErr('pincode_err');
+
+    const startHub = document.getElementById('starting_from').value;
+    const destHub = document.getElementById('destination').value;
+    if(!startHub){ showErr('starting_from_err','Select starting hub.'); stop = true; }
+    else hideErr('starting_from_err');
+    if(!destHub){ showErr('destination_err','Select destination hub.'); stop = true; }
+    else hideErr('destination_err');
+
+    // ---- FILES: check presence, type and size ----
+    const idEl = document.getElementById('id_proof');
+    const photoEl = document.getElementById('photo');
+
+    if(!idEl || !idEl.files || !idEl.files.length){
+      showErr('id_proof_err','ID proof is required.');
+      stop = true;
+    } else {
+      const r = fileHasValidTypeAndSize(idEl.files[0]);
+      if(!r.ok){ showErr('id_proof_err', r.msg); stop = true; } else hideErr('id_proof_err');
+    }
+
+    if(!photoEl || !photoEl.files || !photoEl.files.length){
+      showErr('photo_err','Passport photo is required.');
+      stop = true;
+    } else {
+      const r2 = fileHasValidTypeAndSize(photoEl.files[0]);
+      if(!r2.ok){ showErr('photo_err', r2.msg); stop = true; } else hideErr('photo_err');
+    }
+
+    if(stop){
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return false;
+    } else {
+      try { localStorage.removeItem(DRAFT_KEY); } catch(e){}
+      return true;
+    }
+  });
+</script>
+</body>
+</html>
