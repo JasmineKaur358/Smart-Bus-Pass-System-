@@ -69,12 +69,20 @@
 
       <div class="field-row">
         <label class="label-inline">City <span class="required">*</span></label>
-        <input id="city" type="text" name="city" required autocomplete="off" value="{{ form.get('city','') }}">
+        <select id="city" name="city" required>
+          <option value="">-- Select City --</option>
+          <option value="Ludhiana" {% if form.get('city')=='Ludhiana' %}selected{% endif %}>Ludhiana</option>
+          <option value="Jalandhar" {% if form.get('city')=='Jalandhar' %}selected{% endif %}>Jalandhar</option>
+        </select>
       </div>
 
       <div class="field-row">
         <label class="label-inline">District <span class="required">*</span></label>
-        <input id="district" type="text" name="district" required autocomplete="off" value="{{ form.get('district','') }}">
+        <select id="district" name="district" required>
+          <option value="">-- Select District --</option>
+          <option value="Ludhiana" {% if form.get('district')=='Ludhiana' %}selected{% endif %}>Ludhiana</option>
+          <option value="Jalandhar" {% if form.get('district')=='Jalandhar' %}selected{% endif %}>Jalandhar</option>
+        </select>
       </div>
 
       <div class="field-row">
@@ -131,7 +139,7 @@
 
       <div class="field-row">
         <label class="label-inline">Start Date</label>
-        <input id="start_date" type="date" name="start_date" value="{{ form.get('start_date','') }}">
+        <input id="start_date" type="date" name="start_date" required value="{{ form.get('start_date','') }}">
       </div>
 
       <h3>Upload Documents</h3>
@@ -195,6 +203,13 @@
   function calcAge(d){ if(!d) return -1; const dob=new Date(d); const t=new Date(); let a=t.getFullYear()-dob.getFullYear(); if((t.getMonth()<dob.getMonth()) || (t.getMonth()==dob.getMonth() && t.getDate()<dob.getDate())) a--; return a; }
 
   (function setDobMax(){ const dob=document.getElementById('dob'); if(!dob) return; const t=new Date(); t.setFullYear(t.getFullYear()-18); dob.max = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })();
+  (function restrictStartDate(){
+  const sd = document.getElementById('start_date');
+  if(!sd) return;
+  const today = new Date().toISOString().split('T')[0];
+  sd.min = today;
+})();
+
 
   function updateCategoryHint(){
     const cat = (document.getElementById('category').value || '').trim();
@@ -209,12 +224,20 @@
 
   const nameEl = document.getElementById('name');
   nameEl.addEventListener('input', function(){
-    const raw = this.value;
-    const cleaned = raw.replace(/[^A-Za-z\s]/g, '');
-    if(raw !== cleaned){
-      this.value = cleaned;
-      showErr('name_err','Name should contain only letters and spaces (no numbers or symbols).');
-    } else hideErr('name_err');
+    let value = this.value;
+
+    // allow only letters & spaces
+    value = value.replace(/[^A-Za-z\s]/g, '');
+
+    // collapse multiple spaces into single space
+    value = value.replace(/\s+/g, ' ');
+
+    // prevent leading space
+    if (value.startsWith(' ')) {
+      value = value.trimStart();
+    }
+
+    this.value = value;
     saveDraft();
   });
 
