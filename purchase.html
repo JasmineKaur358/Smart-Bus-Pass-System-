@@ -10,10 +10,16 @@
 <body>
   <div class="container">
     <h2>Buy Pass</h2>
+    <!-- SAFETY: hidden values for disabled fields -->
+    <input type="hidden" id="hiddenStartHub" value="{{ start_hub }}">
+    <input type="hidden" id="hiddenDestHub" value="{{ dest_hub }}">
+    <input type="hidden" id="hiddenCategory" value="{{ user_category }}">
+    <input type="hidden" id="hiddenPassType" value="{{ pass_type }}">
+
 
     <div class="row">
       <label>Start hub:</label>
-      <select id="startHub">
+      <select id="startHub" disabled>
         <option value="">-- Select start hub --</option>
         {% for h in hubs %}
           <option value="{{ h }}" {% if start_hub==h %}selected{% endif %}>{{ h }}</option>
@@ -23,7 +29,7 @@
 
     <div class="row">
       <label>Destination hub:</label>
-      <select id="destHub">
+      <select id="destHub" disabled>
         <option value="">-- Select destination hub --</option>
         {% for h in hubs %}
           <option value="{{ h }}" {% if dest_hub==h %}selected{% endif %}>{{ h }}</option>
@@ -33,7 +39,7 @@
 
     <div class="row">
       <label>Category:</label>
-      <select id="category">
+      <select id="category" disabled>
         <option value="General" {% if user_category=='General' or not user_category %}selected{% endif %}>General</option>
         <option value="Student" {% if user_category=='Student' %}selected{% endif %}>Student</option>
         <option value="Senior Citizen" {% if user_category=='Senior Citizen' %}selected{% endif %}>Senior Citizen</option>
@@ -42,16 +48,16 @@
 
     <div class="row">
       <label>Pass type:</label>
-      <select id="passType">
-        <option value="Daily">Daily</option>
-        <option value="Weekly">Weekly</option>
-        <option value="Monthly" selected>Monthly</option>
+      <select id="passType" disabled>
+        <option value="Daily"{% if pass_type =='Daily' %}selected{% endif %}>Daily</option>
+        <option value="Weekly"{% if pass_type =='Weekly' %}selected{% endif %}>Weekly</option>
+        <option value="Monthly" {% if pass_type =='Monthly' %}selected{% endif %}>Monthly</option>
       </select>
     </div>
 
     <div class="row">
-      <label>Valid from (optional, YYYY-MM-DD):</label>
-      <input id="validFrom" type="date" />
+      <label>Valid from ( YYYY-MM-DD):</label>
+      <input id="validFrom" type="date" value="{{ valid_from }}" readonly  />
     </div>
 
     <div class="priceBox" id="priceBox" aria-live="polite">
@@ -117,11 +123,24 @@
 
     function getSelections(){
       return {
-        start_hub: document.getElementById('startHub').value,
-        dest_hub: document.getElementById('destHub').value,
-        category: document.getElementById('category').value,
-        pass_type: document.getElementById('passType').value,
-        valid_from: document.getElementById('validFrom').value
+        start_hub:
+         document.getElementById('startHub').value ||
+         document.getElementById('hiddenStartHub').value,
+
+        dest_hub:
+         document.getElementById('destHub').value ||
+         document.getElementById('hiddenDestHub').value,
+
+        category:
+         document.getElementById('category').value ||
+         document.getElementById('hiddenCategory').value,
+
+        pass_type:
+         document.getElementById('passType').value ||
+         document.getElementById('hiddenPassType').value,
+
+        valid_from:
+         document.getElementById('validFrom').value
       };
     }
 
