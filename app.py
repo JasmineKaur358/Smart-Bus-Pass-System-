@@ -801,24 +801,35 @@ def cancel_registration():
 # ---------- BUY PASS RENDER ROUTE ----------
 @app.route("/buy-pass/<int:user_id>")
 def buy_pass(user_id):
+    
+    #safety check 
     if not user_id:
         user_id = session.get("registered_user_id")
         if not user_id:
             return redirect(url_for("home"))
+        
     user = User.query.get(user_id)
     if not user:
         return redirect(url_for("home"))
-    ctx = {
-        "user_id": user_id,
-        "user_name": user.name if user else "",
-        "user_email": user.email if user else "",
-        "user_phone": user.phone if user else "",
-        "start_hub": user.starting_from if user else "",
-        "dest_hub": user.destination if user else "",
-        "user_category": user.category if user else "",
-        "hubs": HUB_NAMES
-    }
-    return render_template("purchase.html", **ctx)
+    
+    return render_template(
+        "purchase.html",
+        hubs = HUB_NAMES,
+        
+        #user identity 
+        user_id = user.id,
+        user_name = user.name,
+        user_email = user.email,
+        user_phone = user.phone,
+        
+        #Registration data (important)
+        start_hub = user.starting_from,
+        dest_hub = user.destination,
+        user_category = user.category,
+        pass_type = user.pass_type,
+        valid_from = user.issue_date   
+    )
+    
 
 @app.route("/price", methods=["POST"])
 def get_price():
